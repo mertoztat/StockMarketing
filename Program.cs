@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using StockMarkets.Data;
+using StockMarkets.Interfaces;
+using StockMarkets.Repository;
 
 namespace StockMarkets;
 
@@ -15,6 +17,7 @@ public class Program
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+        builder.Services.AddScoped<IStockRepository, StockRepository>();
 
         builder.Services.AddDbContext<ApplicationDBContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
