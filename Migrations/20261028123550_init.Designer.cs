@@ -13,7 +13,7 @@ namespace StockMarkets.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
     [Migration("20261028123550_init")]
-    partial class init
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
