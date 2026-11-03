@@ -15,7 +15,8 @@ public static class StockMappers
             Purchase = stockModel.Purchase,
             LastDividend = stockModel.LastDividend,
             Industry = stockModel.Industry,
-            MarketCap = stockModel.MarketCap
+            MarketCap = stockModel.MarketCap,
+            Comments = stockModel.Comments.Select(c => c.ToCommentDto()).ToList()
         };
     }
     public static Stock ToStockFromCreateDto(this CreateStockRequestDto stockDto)
@@ -39,4 +40,5 @@ public static class StockMappers
         stockModel.Industry = updateDto.Industry;
         stockModel.MarketCap = updateDto.MarketCap;
     }
+    
 }

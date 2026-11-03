@@ -40,6 +40,11 @@ public class StockController : ControllerBase
    [HttpPost]
    public async Task<IActionResult> CreateStock([FromBody] CreateStockRequestDto stockDto)
    {
+      if (await _stockRepository.SymbolExistsAsync(stockDto.Symbol))
+      {
+         return Conflict("A stock with this symbol already exists.");
+      }
+
       var stockModel = stockDto.ToStockFromCreateDto();
       await _stockRepository.CreateAsync(stockModel);
       return CreatedAtAction(nameof(GetStockById), new { id = stockModel.Id }, stockModel.ToStockDto());
@@ -49,13 +54,18 @@ public class StockController : ControllerBase
    [Route("{id}")]
    public async Task<IActionResult> UpdateStock([FromRoute] int id, [FromBody] UpdateStockRequestDto updateDto)
    {
+      if (await _stockRepository.SymbolExistsAsync(updateDto.Symbol, id))
+      {
+         return Conflict("A stock with this symbol already exists.");
+      }
+
       var stockModel = await _stockRepository.UpdateAsync(id, updateDto);
       if (stockModel == null)
       {
          return NotFound();
       }
-      
-      return NoContent();
+
+      return Ok(stockModel.ToStockDto());
    }
 
    [HttpDelete]

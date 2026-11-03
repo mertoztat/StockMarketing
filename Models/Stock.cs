@@ -1,10 +1,14 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace StockMarkets.Models;
 
+[Index(nameof(Symbol), IsUnique = true)]
 public class Stock
 {
     public int Id { get; set; }
+    [MaxLength(10)]
     public string Symbol { get; set; } = string.Empty;
     public string CompanyName { get; set; } = string.Empty;
     [Column(TypeName = "decimal(18,2)")]
@@ -14,5 +18,4 @@ public class Stock
     public string Industry { get; set; } = string.Empty;
     public long MarketCap { get; set; }
     public List<Comment> Comments { get; set; } = new List<Comment>();
-    
 }
