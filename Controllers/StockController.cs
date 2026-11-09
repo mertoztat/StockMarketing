@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using StockMarkets.DTOs;
+using StockMarkets.Helpers;
 using StockMarkets.Interfaces;
 using StockMarkets.Mappers;
 
@@ -17,9 +18,10 @@ public class StockController : ControllerBase
    }
 
    [HttpGet]
-   public async Task<IActionResult> GetAllStocks()
+   public async Task<IActionResult> GetAllStocks([FromQuery] QueryObject query)
    {
-      var stocks = await _stockRepository.GetAllAsync();
+       if (!ModelState.IsValid) return BadRequest(ModelState);
+       var stocks = await _stockRepository.GetAllAsync(query);
       var stockDtos = stocks.Select(stock => stock.ToStockDto());
       return Ok(stockDtos);
    }
@@ -28,7 +30,7 @@ public class StockController : ControllerBase
    public async Task<IActionResult> GetStockById([FromRoute] int id)
    {
       var stock = await _stockRepository.GetByIdAsync(id);
-      
+
       if (stock == null)
       {
          return NotFound();

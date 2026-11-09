@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using StockMarkets.Data;
 using StockMarkets.DTOs;
+using StockMarkets.Helpers;
 using StockMarkets.Interfaces;
 using StockMarkets.Mappers;
 using StockMarkets.Models;
@@ -16,9 +17,34 @@ public class StockRepository : IStockRepository
         _context = context;
     }
 
-    public async Task<List<Stock>> GetAllAsync()
+    public async Task<List<Stock>> GetAllAsync(QueryObject query)
     {
-        return await _context.Stocks.Include(c => c.Comments).ToListAsync();
+        var stocksQuery = _context.Stocks.Include(c => c.Comments).AsQueryable();
+
+        if (!string.IsNullOrEmpty(query.Symbol)) stocksQuery = stocksQuery.Where(s => s.Symbol.Contains(query.Symbol));
+
+        if (!string.IsNullOrEmpty(query.CompanyName))
+            stocksQuery = stocksQuery.Where(s => s.CompanyName.Contains(query.CompanyName));
+
+        if (!string.IsNullOrEmpty(query.SortBy))
+        {
+            if (query.SortBy.Equals("Symbol", StringComparison.OrdinalIgnoreCase))
+            {
+                stocksQuery = query.isDescending
+                    ? stocksQuery.OrderByDescending(s => s.Symbol)
+                    : stocksQuery.OrderBy(s => s.Symbol);
+            }
+            else if (query.SortBy.Equals("CompanyName", StringComparison.OrdinalIgnoreCase))
+            {
+                stocksQuery = query.isDescending
+                    ? stocksQuery.OrderByDescending(s => s.CompanyName)
+                    : stocksQuery.OrderBy(s => s.CompanyName);
+            }
+        }
+
+        int skip = (query.PageNumber - 1) * query.PageSize;
+
+        return await stocksQuery.Skip(skip).Take(query.PageSize).ToListAsync();
     }
 
     public async Task<Stock?> GetByIdAsync(int id)
