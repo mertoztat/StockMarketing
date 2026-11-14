@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StockMarkets.DTOs;
 using StockMarkets.Helpers;
@@ -18,6 +19,7 @@ public class StockController : ControllerBase
    }
 
    [HttpGet]
+   [Authorize]
    public async Task<IActionResult> GetAllStocks([FromQuery] QueryObject query)
    {
        if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -27,6 +29,7 @@ public class StockController : ControllerBase
    }
 
    [HttpGet("{id}")]
+   [Authorize]
    public async Task<IActionResult> GetStockById([FromRoute] int id)
    {
       var stock = await _stockRepository.GetByIdAsync(id);
