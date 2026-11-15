@@ -13,15 +13,15 @@ public class CommentRepository : ICommentRepository
     {
         _context = context;
     }
-    
+
     public async Task<List<Comment>> GetAllAsync()
     {
-        return await _context.Comments.ToListAsync();
+        return await _context.Comments.Include(c => c.AppUser).ToListAsync();
     }
 
     public async Task<Comment?> GetByIdAsync(int id)
     {
-        return await _context.Comments.FindAsync(id);
+        return await _context.Comments.Include(c => c.AppUser).FirstOrDefaultAsync(c => c.Id == id);
     }
 
     public async Task<Comment> CreateAsync(Comment commentModel)
@@ -35,7 +35,7 @@ public class CommentRepository : ICommentRepository
     {
         var existingComment = await _context.Comments.FindAsync(id);
         if (existingComment == null) return null;
-        
+
         _context.Entry(existingComment).CurrentValues.SetValues(updateCommentDto);
         await _context.SaveChangesAsync();
         return existingComment;

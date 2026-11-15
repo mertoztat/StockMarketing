@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
-
+using System.ComponentModel.DataAnnotations.Schema;
 namespace StockMarkets.Models;
 
+[Table("Comments")]
 public class Comment
 {
     public int Id { get; set; }
@@ -12,4 +13,6 @@ public class Comment
     public string Title { get; set; } = string.Empty;
     public Stock? Stock { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string AppUserId { get; set; }
+    public AppUser AppUser { get; set; }
 }

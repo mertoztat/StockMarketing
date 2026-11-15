@@ -1,7 +1,10 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using StockMarkets.DTOs;
+using StockMarkets.Extensions;
 using StockMarkets.Interfaces;
 using StockMarkets.Mappers;
+using StockMarkets.Models;
 
 namespace StockMarkets.Controllers
 {
@@ -11,11 +14,14 @@ namespace StockMarkets.Controllers
     {
         private readonly ICommentRepository _commentRepository;
         private readonly IStockRepository _stockRepository;
+        private readonly UserManager<AppUser> _userManager;
 
-        public CommentController(ICommentRepository commentRepository, IStockRepository stockRepository)
+        public CommentController(ICommentRepository commentRepository, IStockRepository stockRepository,
+            UserManager<AppUser> userManager)
         {
             _commentRepository = commentRepository;
             _stockRepository = stockRepository;
+            _userManager = userManager;
         }
 
         // GET: api/Comment
@@ -55,7 +61,11 @@ namespace StockMarkets.Controllers
                 return Conflict("The same comment already exists for this stock.");
             }
 
+            string userName = User.GetUsername();
+            var appUser = await _userManager.FindByNameAsync(userName);
+
             var commentModel = createDto.ToCommentFromCreate(stockId);
+            commentModel.AppUserId = appUser.Id;
             var comment = await _commentRepository.CreateAsync(commentModel);
             return CreatedAtAction(
                 nameof(GetCommentById),

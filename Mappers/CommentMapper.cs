@@ -14,9 +14,10 @@ public static class CommentMapper
             Title = commentModel.Title,
             CreatedAt = commentModel.CreatedAt,
             StockId = commentModel.StockId,
+            CreatedBy = commentModel.AppUser?.UserName
         };
     }
-    
+
     public static Comment ToCommentFromCreate(this CreateCommentDto commentDto, int stockId)
     {
         return new Comment
@@ -26,7 +27,7 @@ public static class CommentMapper
             Content = commentDto.Content,
         };
     }
-    
+
     public static void ToCommentFromUpdate (this UpdateCommentDto updateDto, Comment commentModel)
     {
         commentModel.Title = updateDto.Title;
