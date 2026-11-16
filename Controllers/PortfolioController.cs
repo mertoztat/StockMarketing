@@ -89,9 +89,9 @@ public class PortfolioController : ControllerBase
 
     private async Task<AppUser?> GetCurrentUserAsync()
     {
-        var username = User.GetUsername();
-        return string.IsNullOrEmpty(username)
+        var userId = User.GetUserId();
+        return string.IsNullOrEmpty(userId)
             ? null
-            : await _userManager.FindByNameAsync(username);
+            : await _userManager.FindByIdAsync(userId);
     }
 }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using StockMarkets.Data;
 using StockMarkets.DTOs;
 using StockMarkets.Interfaces;
 using StockMarkets.Models;
@@ -36,7 +37,7 @@ public class AccountController : ControllerBase
             var createdUser = await _userManager.CreateAsync(appUser, registerRequest.Password);
             if (createdUser.Succeeded)
             {
-                var roleResult = await _userManager.AddToRoleAsync(appUser, "User");
+                var roleResult = await _userManager.AddToRoleAsync(appUser, RoleConstants.UserName);
                 if (roleResult.Succeeded)
                 {
                     return Ok(
@@ -44,7 +45,7 @@ public class AccountController : ControllerBase
                         {
                             UserName = appUser.UserName,
                             Email = appUser.Email,
-                            Token = _tokenService.CreateToken(appUser)
+                            Token = _tokenService.CreateToken(appUser, await _userManager.GetRolesAsync(appUser))
                         });
                 }
                 else
@@ -76,7 +77,8 @@ public class AccountController : ControllerBase
             return Ok(
                 new NewUserDto
                 {
-                    UserName = user.UserName, Email = user.Email, Token = _tokenService.CreateToken(user)
+                    UserName = user.UserName, Email = user.Email,
+                    Token = _tokenService.CreateToken(user, await _userManager.GetRolesAsync(user))
                 });
         }
         catch (Exception e)

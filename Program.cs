@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using StockMarkets.Data;
+using StockMarkets.Extensions;
 using StockMarkets.Interfaces;
 using StockMarkets.Models;
 using StockMarkets.Repository;
@@ -76,8 +77,13 @@ public class Program
                                 opt.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;
         }).AddJwtBearer(options =>
             {
+                // Keep claim names exactly as in the token ("sub", "role", ...) instead of
+                // letting the handler rewrite them to long ClaimTypes.* URIs.
+                options.MapInboundClaims = false;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
+                    NameClaimType = "given_name",
+                    RoleClaimType = ClaimsExtensions.RoleClaimType,
                     ValidateIssuer = true,
                     ValidIssuer = builder.Configuration["JWT:Issuer"],
                     ValidateAudience = true,

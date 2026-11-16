@@ -51,13 +51,13 @@ namespace StockMarkets.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "aa8318e0-85bd-4b82-ad4f-6dc060883c42",
+                            Id = "83914810-9a2d-429f-8e7e-0297b0989493",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "ed0ed828-19b6-4c54-b8de-8d0d6f712829",
+                            Id = "938d001f-ef22-4687-8bd9-ec3f9027b00c",
                             Name = "User",
                             NormalizedName = "USER"
                         });
@@ -268,7 +268,7 @@ namespace StockMarkets.Migrations
 
                     b.HasIndex("StockId");
 
-                    b.ToTable("Comments");
+                    b.ToTable("Comments", (string)null);
                 });
 
             modelBuilder.Entity("StockMarkets.Models.Portfolio", b =>
@@ -283,7 +283,7 @@ namespace StockMarkets.Migrations
 
                     b.HasIndex("StockId");
 
-                    b.ToTable("Portfolios");
+                    b.ToTable("Portfolios", (string)null);
                 });
 
             modelBuilder.Entity("StockMarkets.Models.Stock", b =>
@@ -318,7 +318,7 @@ namespace StockMarkets.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Stocks");
+                    b.ToTable("Stocks", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

@@ -35,7 +35,18 @@ public class ApplicationDBContext : IdentityDbContext<AppUser>
 
         var roles = new List<IdentityRole>
         {
-            new() { Name = "Admin", NormalizedName = "ADMIN" }, new() { Name = "User", NormalizedName = "USER" }
+            new()
+            {
+                Id = RoleConstants.AdminRoleId,
+                Name = RoleConstants.AdminName,
+                NormalizedName = RoleConstants.AdminName.ToUpperInvariant()
+            },
+            new()
+            {
+                Id = RoleConstants.UserRoleId,
+                Name = RoleConstants.UserName,
+                NormalizedName = RoleConstants.UserName.ToUpperInvariant()
+            }
         };
         builder.Entity<IdentityRole>().HasData(roles);
     }
