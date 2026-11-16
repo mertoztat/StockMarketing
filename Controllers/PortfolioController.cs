@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StockMarkets.DTOs;
+using StockMarkets.Exceptions;
 using StockMarkets.Extensions;
 using StockMarkets.Interfaces;
 using StockMarkets.Mappers;
@@ -37,7 +38,7 @@ public class PortfolioController : ControllerBase
     public async Task<IActionResult> AddToPortfolio([FromQuery] string symbol)
     {
         if (string.IsNullOrWhiteSpace(symbol))
-            return BadRequest("Symbol is required.");
+            throw new ValidationFailedException("symbol", "Symbol is required.");
 
         var stock = await _portfolioService.AddStockAsync(User.GetUserId(), symbol);
         return CreatedAtAction(nameof(GetUserPortfolio), null, stock.ToStockDto());
@@ -51,7 +52,7 @@ public class PortfolioController : ControllerBase
     public async Task<IActionResult> RemoveFromPortfolio([FromQuery] string symbol)
     {
         if (string.IsNullOrWhiteSpace(symbol))
-            return BadRequest("Symbol is required.");
+            throw new ValidationFailedException("symbol", "Symbol is required.");
 
         await _portfolioService.RemoveStockAsync(User.GetUserId(), symbol);
         return NoContent();

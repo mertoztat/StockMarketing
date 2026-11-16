@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using StockMarkets.DTOs;
+using StockMarkets.Exceptions;
 using StockMarkets.Extensions;
 using StockMarkets.Interfaces;
 using StockMarkets.Mappers;
@@ -53,12 +54,12 @@ namespace StockMarkets.Controllers
         {
             if (!await _stockRepository.StockExist(stockId))
             {
-                return NotFound("Stock does not exist.");
+                throw new NotFoundException("Stock does not exist.");
             }
 
             if (await _commentRepository.CommentExistsAsync(stockId, createDto.Title, createDto.Content))
             {
-                return Conflict("The same comment already exists for this stock.");
+                throw new ConflictException(ErrorCodes.DuplicateComment, "The same comment already exists for this stock.");
             }
 
             string userName = User.GetUsername();
@@ -80,18 +81,18 @@ namespace StockMarkets.Controllers
             var existingComment = await _commentRepository.GetByIdAsync(id);
             if (existingComment == null)
             {
-                return NotFound("Comment not found.");
+                throw new NotFoundException("Comment not found.");
             }
 
             if (await _commentRepository.CommentExistsAsync(existingComment.StockId, updateDto.Title, updateDto.Content, id))
             {
-                return Conflict("The same comment already exists for this stock.");
+                throw new ConflictException(ErrorCodes.DuplicateComment, "The same comment already exists for this stock.");
             }
 
             var updatedComment = await _commentRepository.UpdateAsync(id, updateDto);
             if (updatedComment == null)
             {
-                return NotFound("Comment not found.");
+                throw new NotFoundException("Comment not found.");
             }
 
             return Ok(updatedComment.ToCommentDto());
@@ -104,7 +105,7 @@ namespace StockMarkets.Controllers
             var deletedComment = await _commentRepository.DeleteAsync(id);
             if (deletedComment == null)
             {
-                return NotFound("Comment not found.");
+                throw new NotFoundException("Comment not found.");
             }
 
             return NoContent();

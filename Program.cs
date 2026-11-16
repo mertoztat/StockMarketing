@@ -21,7 +21,9 @@ public class Program
 
         // Add services to the container.
 
-        builder.Services.AddControllers();
+        builder.Services.AddControllers()
+            .ConfigureApiBehaviorOptions(options =>
+                options.InvalidModelStateResponseFactory = ModelStateProblemFactory.Create);
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
@@ -57,9 +59,11 @@ public class Program
         builder.Services.AddScoped<IPortfolioRepository, PortfolioRepository>();
         builder.Services.AddScoped<IPortfolioService, PortfolioService>();
 
-        // Maps service-layer DomainExceptions to HTTP responses (replaced by ProblemDetails in TASK-002).
-        builder.Services.AddExceptionHandler<DomainExceptionHandler>();
-        builder.Services.AddProblemDetails();
+        // Every error (exceptions, model validation, bare 401/403/404) is returned as RFC 7807 ProblemDetails.
+        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+        builder.Services.AddProblemDetails(options =>
+            options.CustomizeProblemDetails = context =>
+                ProblemDetailsDefaults.Apply(context.HttpContext, context.ProblemDetails));
 
         builder.Services.AddDbContext<ApplicationDBContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -71,6 +75,7 @@ public class Program
                 options.Password.RequireUppercase = true;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequiredLength = 6;
+                options.User.RequireUniqueEmail = true;
             })
             .AddEntityFrameworkStores<ApplicationDBContext>();
         builder.Services.AddAuthentication(opt =>
@@ -114,6 +119,8 @@ public class Program
         }
 
         app.UseExceptionHandler();
+        // Gives empty 401/403/404 responses a ProblemDetails body too.
+        app.UseStatusCodePages();
         app.UseHttpsRedirection();
 
 

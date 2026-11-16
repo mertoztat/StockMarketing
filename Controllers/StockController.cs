@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StockMarkets.DTOs;
+using StockMarkets.Exceptions;
 using StockMarkets.Helpers;
 using StockMarkets.Interfaces;
 using StockMarkets.Mappers;
@@ -22,8 +23,7 @@ public class StockController : ControllerBase
    [Authorize]
    public async Task<IActionResult> GetAllStocks([FromQuery] QueryObject query)
    {
-       if (!ModelState.IsValid) return BadRequest(ModelState);
-       var stocks = await _stockRepository.GetAllAsync(query);
+              var stocks = await _stockRepository.GetAllAsync(query);
        var stockDtos = stocks.Select(stock => stock.ToStockDto()).ToList();
       return Ok(stockDtos);
    }
@@ -47,7 +47,7 @@ public class StockController : ControllerBase
    {
       if (await _stockRepository.SymbolExistsAsync(stockDto.Symbol))
       {
-         return Conflict("A stock with this symbol already exists.");
+         throw new ConflictException(ErrorCodes.DuplicateSymbol, "A stock with this symbol already exists.");
       }
 
       var stockModel = stockDto.ToStockFromCreateDto();
@@ -61,7 +61,7 @@ public class StockController : ControllerBase
    {
       if (await _stockRepository.SymbolExistsAsync(updateDto.Symbol, id))
       {
-         return Conflict("A stock with this symbol already exists.");
+         throw new ConflictException(ErrorCodes.DuplicateSymbol, "A stock with this symbol already exists.");
       }
 
       var stockModel = await _stockRepository.UpdateAsync(id, updateDto);

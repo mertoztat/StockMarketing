@@ -35,7 +35,7 @@ public class PortfolioService : IPortfolioService
                     ?? throw new NotFoundException("Stock not found.");
 
         if (await _portfolioRepository.ExistsAsync(user.Id, stock.Id))
-            throw new ConflictException("Stock already exists in portfolio.");
+            throw new ConflictException(ErrorCodes.AlreadyInPortfolio, "Stock already exists in portfolio.");
 
         await _portfolioRepository.CreateAsync(new Portfolio { AppUserId = user.Id, StockId = stock.Id });
         return stock;
