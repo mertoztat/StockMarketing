@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using StockMarkets.Data;
+using StockMarkets.Exceptions;
 using StockMarkets.Extensions;
 using StockMarkets.Interfaces;
 using StockMarkets.Models;
@@ -54,6 +55,11 @@ public class Program
         builder.Services.AddScoped<ICommentRepository, CommentRepository>();
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IPortfolioRepository, PortfolioRepository>();
+        builder.Services.AddScoped<IPortfolioService, PortfolioService>();
+
+        // Maps service-layer DomainExceptions to HTTP responses (replaced by ProblemDetails in TASK-002).
+        builder.Services.AddExceptionHandler<DomainExceptionHandler>();
+        builder.Services.AddProblemDetails();
 
         builder.Services.AddDbContext<ApplicationDBContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -107,6 +113,7 @@ public class Program
             app.UseSwaggerUI();
         }
 
+        app.UseExceptionHandler();
         app.UseHttpsRedirection();
 
 

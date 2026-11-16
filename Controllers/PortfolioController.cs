@@ -1,11 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using StockMarkets.DTOs;
 using StockMarkets.Extensions;
 using StockMarkets.Interfaces;
 using StockMarkets.Mappers;
-using StockMarkets.Models;
 
 namespace StockMarkets.Controllers;
 
@@ -14,18 +12,11 @@ namespace StockMarkets.Controllers;
 [Authorize]
 public class PortfolioController : ControllerBase
 {
-    private readonly UserManager<AppUser> _userManager;
-    private readonly IStockRepository _stockRepository;
-    private readonly IPortfolioRepository _portfolioRepository;
+    private readonly IPortfolioService _portfolioService;
 
-    public PortfolioController(
-        UserManager<AppUser> userManager,
-        IStockRepository stockRepository,
-        IPortfolioRepository portfolioRepository)
+    public PortfolioController(IPortfolioService portfolioService)
     {
-        _userManager = userManager;
-        _stockRepository = stockRepository;
-        _portfolioRepository = portfolioRepository;
+        _portfolioService = portfolioService;
     }
 
     [HttpGet]
@@ -33,15 +24,13 @@ public class PortfolioController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetUserPortfolio()
     {
-        var appUser = await GetCurrentUserAsync();
-        if (appUser is null) return Unauthorized();
-
-        var stocks = await _portfolioRepository.GetUserPortfolioAsync(appUser);
+        var stocks = await _portfolioService.GetUserPortfolioAsync(User.GetUserId());
         return Ok(stocks.Select(stock => stock.ToStockDto()));
     }
 
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -50,18 +39,7 @@ public class PortfolioController : ControllerBase
         if (string.IsNullOrWhiteSpace(symbol))
             return BadRequest("Symbol is required.");
 
-        var appUser = await GetCurrentUserAsync();
-        if (appUser is null) return Unauthorized();
-
-        var stock = await _stockRepository.GetBySymbolAsync(symbol);
-        if (stock is null) return NotFound("Stock not found.");
-
-        if (await _portfolioRepository.ExistsAsync(appUser.Id, stock.Id))
-            return Conflict("Stock already exists in portfolio.");
-
-        var portfolio = new Portfolio { AppUserId = appUser.Id, StockId = stock.Id };
-        await _portfolioRepository.CreateAsync(portfolio);
-
+        var stock = await _portfolioService.AddStockAsync(User.GetUserId(), symbol);
         return CreatedAtAction(nameof(GetUserPortfolio), null, stock.ToStockDto());
     }
 
@@ -75,23 +53,7 @@ public class PortfolioController : ControllerBase
         if (string.IsNullOrWhiteSpace(symbol))
             return BadRequest("Symbol is required.");
 
-        var appUser = await GetCurrentUserAsync();
-        if (appUser is null) return Unauthorized();
-
-        var stock = await _stockRepository.GetBySymbolAsync(symbol);
-        if (stock is null) return NotFound("Stock not found.");
-
-        var deleted = await _portfolioRepository.DeleteAsync(appUser.Id, stock.Id);
-        if (deleted is null) return NotFound("Stock is not in your portfolio.");
-
+        await _portfolioService.RemoveStockAsync(User.GetUserId(), symbol);
         return NoContent();
-    }
-
-    private async Task<AppUser?> GetCurrentUserAsync()
-    {
-        var userId = User.GetUserId();
-        return string.IsNullOrEmpty(userId)
-            ? null
-            : await _userManager.FindByIdAsync(userId);
     }
 }
