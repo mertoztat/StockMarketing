@@ -58,6 +58,7 @@ public class Program
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IPortfolioRepository, PortfolioRepository>();
         builder.Services.AddScoped<IPortfolioService, PortfolioService>();
+        builder.Services.AddScoped<ICommentService, CommentService>();
 
         // Every error (exceptions, model validation, bare 401/403/404) is returned as RFC 7807 ProblemDetails.
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

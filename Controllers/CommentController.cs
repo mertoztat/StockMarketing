@@ -1,11 +1,8 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using StockMarkets.DTOs;
-using StockMarkets.Exceptions;
 using StockMarkets.Extensions;
 using StockMarkets.Interfaces;
 using StockMarkets.Mappers;
-using StockMarkets.Models;
 
 namespace StockMarkets.Controllers
 {
@@ -13,38 +10,26 @@ namespace StockMarkets.Controllers
     [ApiController]
     public class CommentController : ControllerBase
     {
-        private readonly ICommentRepository _commentRepository;
-        private readonly IStockRepository _stockRepository;
-        private readonly UserManager<AppUser> _userManager;
+        private readonly ICommentService _commentService;
 
-        public CommentController(ICommentRepository commentRepository, IStockRepository stockRepository,
-            UserManager<AppUser> userManager)
+        public CommentController(ICommentService commentService)
         {
-            _commentRepository = commentRepository;
-            _stockRepository = stockRepository;
-            _userManager = userManager;
+            _commentService = commentService;
         }
 
         // GET: api/Comment
         [HttpGet]
         public async Task<IActionResult> GetAllComments()
         {
-            var comments = await _commentRepository.GetAllAsync();
-            var commentDtos = comments.Select(c => c.ToCommentDto()).ToList();
-            return Ok(commentDtos);
+            var comments = await _commentService.GetAllAsync();
+            return Ok(comments.Select(c => c.ToCommentDto()).ToList());
         }
 
         // GET: api/Comment/5
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCommentById([FromRoute] int id)
         {
-            var comment = await _commentRepository.GetByIdAsync(id);
-
-            if (comment == null)
-            {
-                return NotFound();
-            }
-
+            var comment = await _commentService.GetByIdAsync(id);
             return Ok(comment.ToCommentDto());
         }
 
@@ -52,22 +37,7 @@ namespace StockMarkets.Controllers
         [HttpPost("{stockId}")]
         public async Task<IActionResult> CreateComment([FromRoute] int stockId, [FromBody] CreateCommentDto createDto)
         {
-            if (!await _stockRepository.StockExist(stockId))
-            {
-                throw new NotFoundException("Stock does not exist.");
-            }
-
-            if (await _commentRepository.CommentExistsAsync(stockId, createDto.Title, createDto.Content))
-            {
-                throw new ConflictException(ErrorCodes.DuplicateComment, "The same comment already exists for this stock.");
-            }
-
-            string userName = User.GetUsername();
-            var appUser = await _userManager.FindByNameAsync(userName);
-
-            var commentModel = createDto.ToCommentFromCreate(stockId);
-            commentModel.AppUserId = appUser.Id;
-            var comment = await _commentRepository.CreateAsync(commentModel);
+            var comment = await _commentService.CreateAsync(User.GetUserId(), stockId, createDto);
             return CreatedAtAction(
                 nameof(GetCommentById),
                 new { id = comment.Id },
@@ -78,36 +48,15 @@ namespace StockMarkets.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateComment([FromRoute] int id, [FromBody] UpdateCommentDto updateDto)
         {
-            var existingComment = await _commentRepository.GetByIdAsync(id);
-            if (existingComment == null)
-            {
-                throw new NotFoundException("Comment not found.");
-            }
-
-            if (await _commentRepository.CommentExistsAsync(existingComment.StockId, updateDto.Title, updateDto.Content, id))
-            {
-                throw new ConflictException(ErrorCodes.DuplicateComment, "The same comment already exists for this stock.");
-            }
-
-            var updatedComment = await _commentRepository.UpdateAsync(id, updateDto);
-            if (updatedComment == null)
-            {
-                throw new NotFoundException("Comment not found.");
-            }
-
-            return Ok(updatedComment.ToCommentDto());
+            var updated = await _commentService.UpdateAsync(id, updateDto);
+            return Ok(updated.ToCommentDto());
         }
 
         // DELETE api/Comment/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteComment([FromRoute] int id)
         {
-            var deletedComment = await _commentRepository.DeleteAsync(id);
-            if (deletedComment == null)
-            {
-                throw new NotFoundException("Comment not found.");
-            }
-
+            await _commentService.DeleteAsync(id);
             return NoContent();
         }
     }
